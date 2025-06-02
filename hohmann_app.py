@@ -8,7 +8,7 @@ st.title("🛰️ Hohmann Transfer Orbit Simulator")
 
 # Sidebar input
 altitude1_km = st.number_input("Initial Orbit Altitude (LEO)", 100, 100000, 500)
-altitude2_km = st.number_input("Final Orbit Altitude (GEO)", 2000, 400000, 35786)
+altitude2_km = st.number_input("Final Orbit Altitude (GEO)", 300, 400000, 35786)
 if altitude2_km <= altitude1_km:
     st.error("⚠️ Final orbit altitude must be greater than initial orbit altitude.")
     st.stop()
