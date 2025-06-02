@@ -45,7 +45,8 @@ earth_km = R_earth / 1000
 x_trans_km = (a_transfer * np.cos(phi) - (a_transfer - r1)) / 1000
 y_trans_km = (a_transfer * np.sqrt(1 - ((r1 - r2)**2 / (4 * a_transfer**2))) * np.sin(phi)) / 1000
 
-fig, ax = plt.subplots(figsize=(7, 7))
+fig, ax = plt.subplots(figsize=(7, 7), facecolor='black')
+ax.set_facecolor("black")
 ax.plot(earth_km * np.cos(theta), earth_km * np.sin(theta), 'gray', label="Earth")
 ax.plot(r1_km * np.cos(theta), r1_km * np.sin(theta), 'b-', label=f"LEO Orbit ({altitude1_km} km)")
 ax.plot(r2_km * np.cos(theta), r2_km * np.sin(theta), 'g-', label=f"GEO Orbit ({altitude2_km} km)")
