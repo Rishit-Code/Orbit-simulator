@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
 from skyfield.api import EarthSatellite, load
-
+ts = load.timescale()
 st.title("🛰️ Hohmann Transfer Orbit Simulator")
 
 # Sidebar input
