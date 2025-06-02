@@ -60,6 +60,15 @@ ax.set_title("Hohmann Transfer Orbit Visualization")
 ax.grid(True)
 ax.legend()
 st.pyplot(fig)
+ax.plot(..., color='white')           # For Earth
+ax.plot(..., color='cyan')            # LEO
+ax.plot(..., color='lime')            # GEO
+ax.plot(..., color='orange', linestyle='--')  # Transfer
+ax.set_title("...", color='white')
+ax.set_xlabel("X (km)", color='white')
+ax.set_ylabel("Y (km)", color='white')
+ax.tick_params(axis='x', colors='white')
+ax.tick_params(axis='y', colors='white')
 
 # Skyfield satellite data
 st.subheader("📡 ISS Live Position")
