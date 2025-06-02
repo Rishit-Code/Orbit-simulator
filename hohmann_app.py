@@ -67,7 +67,7 @@ ax.spines['bottom'].set_color('white')
 ax.spines['left'].set_color('white')
 ax.grid(True, color='gray', linestyle=':', alpha=0.3)
 ax.legend(facecolor='black', edgecolor='white', labelcolor='white')
-
+st.pyplot(fig)
 # Skyfield satellite data
 st.subheader("📡 ISS Live Position")
 ts = load.timescale()
