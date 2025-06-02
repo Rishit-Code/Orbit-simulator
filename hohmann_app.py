@@ -47,28 +47,26 @@ y_trans_km = (a_transfer * np.sqrt(1 - ((r1 - r2)**2 / (4 * a_transfer**2))) * n
 
 fig, ax = plt.subplots(figsize=(7, 7), facecolor='black')
 ax.set_facecolor("black")
-ax.plot(earth_km * np.cos(theta), earth_km * np.sin(theta), 'gray', label="Earth")
-ax.plot(r1_km * np.cos(theta), r1_km * np.sin(theta), 'b-', label=f"LEO Orbit ({altitude1_km} km)")
-ax.plot(r2_km * np.cos(theta), r2_km * np.sin(theta), 'g-', label=f"GEO Orbit ({altitude2_km} km)")
-ax.plot(x_trans_km, y_trans_km, 'r--', label="Hohmann Transfer")
+ax.plot(earth_km * np.cos(theta), earth_km * np.sin(theta), color='white', label="Earth")
+# Initial Orbit (LEO)
+ax.plot(r1_km * np.cos(theta), r1_km * np.sin(theta), color='cyan', label=f"LEO Orbit ({altitude1_km} km)")
+# Final Orbit (GEO)
+ax.plot(r2_km * np.cos(theta), r2_km * np.sin(theta), color='lime', label=f"GEO Orbit ({altitude2_km} km)")
+# Transfer Orbit
+ax.plot(x_trans_km, y_trans_km, color='orange', linestyle='--', label="Hohmann Transfer")
+# Burn markers
 ax.plot(r1_km, 0, 'X', color='red', label="Burn 1")
-ax.plot(r2_km, 0, 'X', color='purple', label="Burn 2")
-ax.axis('equal')
-ax.set_xlabel("X (km)")
-ax.set_ylabel("Y (km)")
-ax.set_title("Hohmann Transfer Orbit Visualization")
-ax.grid(True)
-ax.legend()
-st.pyplot(fig)
-ax.plot(..., color='white')           # For Earth
-ax.plot(..., color='cyan')            # LEO
-ax.plot(..., color='lime')            # GEO
-ax.plot(..., color='orange', linestyle='--')  # Transfer
-ax.set_title("...", color='white')
+ax.plot(r2_km, 0, 'X', color='violet', label="Burn 2")
+# Styling 
+ax.set_title("Hohmann Transfer Orbit", color='white')
 ax.set_xlabel("X (km)", color='white')
 ax.set_ylabel("Y (km)", color='white')
 ax.tick_params(axis='x', colors='white')
 ax.tick_params(axis='y', colors='white')
+ax.spines['bottom'].set_color('white')
+ax.spines['left'].set_color('white')
+ax.grid(True, color='gray', linestyle=':', alpha=0.3)
+ax.legend(facecolor='black', edgecolor='white', labelcolor='white')
 
 # Skyfield satellite data
 st.subheader("📡 ISS Live Position")
