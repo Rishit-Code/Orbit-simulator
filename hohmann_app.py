@@ -7,8 +7,8 @@ from skyfield.api import EarthSatellite, load
 st.title("🛰️ Hohmann Transfer Orbit Simulator")
 
 # Sidebar input
-altitude1_km = st.slider("Initial Orbit Altitude (LEO)", 100, 1000, 500)
-altitude2_km = st.slider("Final Orbit Altitude (GEO)", 20000, 40000, 35786)
+altitude1_km = st.number_input("Initial Orbit Altitude (LEO)", 100, 1000, 500)
+altitude2_km = st.number_input("Final Orbit Altitude (GEO)", 20000, 40000, 35786)
 
 # Constants
 G = 6.67430e-11
