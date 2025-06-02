@@ -59,6 +59,16 @@ ax.plot(x_trans_km, y_trans_km, color='orange', linestyle='--', label="Hohmann T
 # Burn markers
 ax.plot(r1_km, 0, 'X', color='red', label="Burn 1")
 ax.plot(r2_km, 0, 'X', color='violet', label="Burn 2")
+t = ts.now()
+iss_pos = EarthSatellite(line1, line2, "ISS", ts).at(t).position.km
+hubble_pos = EarthSatellite(line3, line4, "Hubble", ts).at(t).position.km
+# Convert to X, Y in orbital plane (2D approximation)
+iss_x, iss_y = iss_pos[0], iss_pos[1]
+hubble_x, hubble_y = hubble_pos[0], hubble_pos[1]
+# Plot ISS
+ax.plot(iss_x, iss_y, marker='o', color='yellow', markersize=8, label="ISS (Live)")
+# Plot Hubble
+ax.plot(hubble_x, hubble_y, marker='*', color='magenta', markersize=10, label="Hubble (Live)")
 # Styling 
 ax.set_title("Hohmann Transfer Orbit", color='white')
 ax.set_xlabel("X (km)", color='white')
@@ -84,3 +94,18 @@ altitude_iss = distance - earth_km
 st.markdown(f"**Current ISS Altitude:** {altitude_iss:.2f} km")
 if abs(altitude_iss - altitude1_km) < 100:
     st.success("🛰️ ISS is near your initial orbit!")
+#More satalites 
+st.subheader(" Hubble Telescope Live Position")
+ts = load.timescale()
+line3 = "1 20580U 90037B   24150.37531449  .00002037  00000+0  10128-3 0  9997"
+line4 = "2 20580  28.4699 353.1648 0002581 345.4144  14.6761 15.09176310584847"
+sat = EarthSatellite(line3, line4, "Hubble telescope", ts)
+t = ts.now()
+position = sat.at(t).position.km
+distance = np.linalg.norm(position)
+altitude_hub = distance - earth_km
+
+st.markdown(f"**Current Hubble telescope Altitude:** {altitude_hub:.2f} km")
+if abs(altitude_hub - altitude1_km) < 100:
+    st.success("Hubble telescope is near your initial orbit!")
+
