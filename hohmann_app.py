@@ -105,18 +105,13 @@ with tab1:
 
 
 # TAB 2: Planet Viewer
-
 with tab2:
     st.title("🌍 Real-Time Planetary Orbit Visualizer")
+
     from skyfield.api import Loader
-    import streamlit as st
-    load = Loader('.')  # use current directory
-    planets = load('de440s.bsp')  
-    sun = planets['sun']
-    earth = planets['earth']
-    mars = planets['mars']
-    venus = planets['venus']
-    jupiter = planets['jupiter']  
+    load = Loader('.')
+    planets = load('./de440s.bsp')  # local version you uploaded
+
     sun = planets['sun']
     earth = planets['earth']
     mars = planets['mars']
@@ -155,3 +150,4 @@ with tab2:
     ax.legend(facecolor='black', edgecolor='white', labelcolor='white')
 
     st.pyplot(fig)
+    
