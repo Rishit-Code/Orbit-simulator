@@ -112,11 +112,11 @@ with tab2:
     load = Loader('.')
     planets = load('./de440s.bsp')  # local version you uploaded
 
-    sun = planets['sun']
-    earth = planets['earth']
-    mars = planets['mars']
-    venus = planets['venus']
-    jupiter = planets['jupiter']
+    sun = planets['Sun']
+    earth = planets['Earth']
+    mars = planets['Mars Barycenter']
+    venus = planets['Venus']
+    jupiter = planets['Jupiter Barycenter']
 
     earth_pos = earth.at(current_time).observe(sun).ecliptic_position().au
     mars_pos = mars.at(current_time).observe(sun).ecliptic_position().au
