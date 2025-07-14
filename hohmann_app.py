@@ -103,13 +103,21 @@ with tab1:
     st.markdown(f"- **ISS:** {iss_alt_km:.2f} km")
     st.markdown(f"- **Hubble:** {hubble_alt_km:.2f} km")
 
-# ====================
+
 # TAB 2: Planet Viewer
-# ====================
+
 with tab2:
     st.title("🌍 Real-Time Planetary Orbit Visualizer")
+    from skyfield.api import Loader
+import streamlit as st
 
-    planets = load('de421.bsp')
+load = Loader('.')  # use current directory
+planets = load('de440s.bsp')  
+sun = planets['sun']
+earth = planets['earth']
+mars = planets['mars']
+venus = planets['venus']
+jupiter = planets['jupiter']  
     sun = planets['sun']
     earth = planets['earth']
     mars = planets['mars']
