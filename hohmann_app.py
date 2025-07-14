@@ -149,10 +149,6 @@ iss_altitude = iss_radial_distance_km - earth_km
 st.markdown(f"**Current ISS Altitude:** {iss_altitude:.2f} km")
 if abs(iss_altitude - altitude1_km) < 100:
     st.success("🛰️ ISS is near your initial orbit!")
-with st.expander("Show orbit visualization code"):
-    with open("Planets", "r") as f:
-        code = f.read()
-    st.code(code, language='python')
 
 # Hubble Altitude
 hubble_altitude = hubble_radial_distance_km - earth_km
