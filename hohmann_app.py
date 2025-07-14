@@ -109,15 +109,14 @@ with tab1:
 with tab2:
     st.title("🌍 Real-Time Planetary Orbit Visualizer")
     from skyfield.api import Loader
-import streamlit as st
-
-load = Loader('.')  # use current directory
-planets = load('de440s.bsp')  
-sun = planets['sun']
-earth = planets['earth']
-mars = planets['mars']
-venus = planets['venus']
-jupiter = planets['jupiter']  
+    import streamlit as st
+    load = Loader('.')  # use current directory
+    planets = load('de440s.bsp')  
+    sun = planets['sun']
+    earth = planets['earth']
+    mars = planets['mars']
+    venus = planets['venus']
+    jupiter = planets['jupiter']  
     sun = planets['sun']
     earth = planets['earth']
     mars = planets['mars']
