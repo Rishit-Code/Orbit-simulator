@@ -155,3 +155,64 @@ hubble_altitude = hubble_radial_distance_km - earth_km
 st.markdown(f"**Current Hubble Telescope Altitude:** {hubble_altitude:.2f} km")
 if abs(hubble_altitude - altitude1_km) < 100:
     st.success("🔭 Hubble Telescope is near your initial orbit!")
+
+st.title("🌍 Real-Time Planetary Orbit Visualizer")
+
+# Load planetary ephemeris data
+planets = load('de421.bsp')
+earth = planets['earth']
+mars = planets['mars']
+venus = planets['venus']
+jupiter = planets['jupiter']
+sun = planets['sun']
+
+# Get real-time positions
+ts = load.timescale()
+t = ts.now()
+
+earth_pos = earth.at(t).observe(sun).ecliptic_position().au
+mars_pos = mars.at(t).observe(sun).ecliptic_position().au
+venus_pos = venus.at(t).observe(sun).ecliptic_position().au
+jupiter_pos = jupiter.at(t).observe(sun).ecliptic_position().au
+
+# Planet orbit visualization
+theta = np.linspace(0, 2*np.pi, 300)
+
+radii = {
+    'earth': 1.0,
+    'mars': 1.52,
+    'venus': 0.72,
+    'jupiter': 5.2,
+}
+
+fig, ax = plt.subplots(figsize=(8,8))
+ax.set_facecolor('black')
+
+# Plot circular orbits
+for planet, r in radii.items():
+    x = r * np.cos(theta)
+    y = r * np.sin(theta)
+    ax.plot(x, y, label=f"{planet.capitalize()} Orbit", linestyle='--')
+
+# Plot planets' current positions
+ax.plot(earth_pos[0], earth_pos[1], 'o', label='Earth', color='cyan')
+ax.plot(mars_pos[0], mars_pos[1], 'o', label='Mars', color='red')
+ax.plot(venus_pos[0], venus_pos[1], 'o', label='Venus', color='orange')
+ax.plot(jupiter_pos[0], jupiter_pos[1], 'o', label='Jupiter', color='gold')
+
+# Plot the Sun
+ax.plot(0, 0, 'o', color='yellow', label='Sun', markersize=12)
+
+# Styling
+ax.set_xlabel("X (AU)", color='white')
+ax.set_ylabel("Y (AU)", color='white')
+ax.set_title("Planetary Orbits & Real-Time Positions", color='white')
+ax.tick_params(colors='white')
+ax.spines['bottom'].set_color('white')
+ax.spines['left'].set_color('white')
+ax.axis('equal')
+ax.legend(facecolor='black', edgecolor='white', labelcolor='white')
+ax.grid(True, linestyle=':', color='gray')
+
+# Display in Streamlit
+st.pyplot(fig)
