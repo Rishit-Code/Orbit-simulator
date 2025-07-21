@@ -9,7 +9,10 @@ planets = load('./de440s.bsp')
 # Set up global time reference
 ts = load.timescale()
 current_time = ts.now()
-tab1, tab2, tab3 = st.tabs(["🛰️ Hohmann Transfer", "🌍 Planet Viewer", "🛰️ LEO to MEO Transfer"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    "🛰️ Hohmann Transfer", "🌍 Planet Viewer", "🛰️ Leo to Meo",
+    "📘 What is Hohmann Transfer?", "🌐 Types of Orbits"
+])
 
 
 # TAB 1: Earth Orbit Transfer
@@ -203,3 +206,75 @@ with tab3:
     ax.grid(True, linestyle=':', color='gray')
     ax.set_aspect('equal')
     st.pyplot(fig)
+#Tab 4
+with tab4:
+    st.title("📘 What is a Hohmann Transfer Orbit?")
+
+    st.markdown("""
+### 🚀 What is a Hohmann Transfer?
+
+A **Hohmann Transfer Orbit** is a simple and fuel-efficient method to move a spacecraft between two circular orbits using **two engine burns**. It’s like changing lanes in space, the smart way.
+
+---
+
+### 🌌 Why Does It Matter?
+
+In space missions, fuel is **precious**. Hohmann transfers are used to:
+- Launch communication satellites from Low Earth Orbit (LEO) to Geostationary Earth Orbit (GEO)
+- Plan interplanetary missions like Earth → Mars or Earth → Venus
+- Reduce fuel costs during orbit adjustments
+
+---
+
+### 🔥 How Does It Work?
+
+1. **Burn 1 (Perigee Burn)**: 
+   - The spacecraft gets a push to enter an elliptical orbit.
+   - This is called the **transfer orbit**.
+2. **Coasting Phase**:
+   - The spacecraft moves along the ellipse using no fuel.
+3. **Burn 2 (Apogee Burn)**:
+   - Another burn circularizes the orbit at the higher altitude.
+
+This method works **only when orbits are in the same plane** and both are nearly circular.
+
+---
+
+### 🧠 Key Physics Concepts
+
+| Concept            | Meaning |
+|--------------------|--------|
+| **ΔV (Delta-V)**    | The change in speed (velocity) the rocket must make during each burn |
+| **Perigee**         | Closest point to Earth in an orbit |
+| **Apogee**          | Farthest point from Earth in an orbit |
+| **Ellipse**         | An oval shape — the shape of the transfer orbit |
+| **Semi-major axis** | The average distance from the center to the edge of the ellipse |
+
+---
+
+### 🧮 Why Only Two Burns?
+
+- It’s based on **Kepler’s Laws** of planetary motion.
+- Two burns are enough when moving between **two circular and coplanar** orbits.
+- It assumes **no drag** (space is vacuum) and that you only need to change speed, not direction.
+
+---
+
+### 📊 Efficiency vs Speed
+
+| Transfer Type            | Fuel Efficiency     | Time Taken |
+|                          |                     |            |
+| **Hohmann Transfer**     | ✅ Very High        |  Slow     |
+| **Bi-Elliptic Transfer** | 🔄 Sometimes better |  Longer   |
+| **Direct Transfer**      | ❌ Wasteful         |  Fast     |
+
+---
+
+### 🛰️ Real World Examples
+
+- **Telecommunication Satellites**: They often launch into a transfer orbit and then complete a Hohmann transfer to reach GEO.
+- **Mars Missions**: Used to send probes from Earth to Mars when their positions align.
+- **Lunar Gateway Project**: NASA is studying variations of Hohmann for Moon missions.
+
+---""")
+    
