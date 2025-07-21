@@ -6,17 +6,13 @@ from skyfield.api import EarthSatellite, load, Loader
 # Load planetary data (used in Tab 2)
 load = Loader(".")
 planets = load('./de440s.bsp')
-
 # Set up global time reference
 ts = load.timescale()
 current_time = ts.now()
-
-# Create 3 tabs
 tab1, tab2, tab3 = st.tabs(["🛰️ Hohmann Transfer", "🌍 Planet Viewer", "🛰️ LEO to MEO Transfer"])
 
 
 # TAB 1: Earth Orbit Transfer
-
 with tab1:
     st.title("🛰️ Hohmann Transfer Orbit Simulator")
     st.markdown("Transfer between **LEO and GEO**. Customize the altitudes below:")
@@ -106,7 +102,6 @@ with tab1:
 
 
 # TAB 2: Planet Viewer
-
 with tab2:
     st.title("🌍 Real-Time Planetary Orbit Visualizer")
 
@@ -149,7 +144,6 @@ with tab2:
     st.pyplot(fig)
 
 # TAB 3: LEO to MEO Transfer
-
 with tab3:
     st.title("🛰️ LEO to MEO Transfer")
     st.markdown("Simulate a transfer between **Low Earth Orbit and Medium Earth Orbit**.")
