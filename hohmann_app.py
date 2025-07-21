@@ -263,7 +263,7 @@ This method works **only when orbits are in the same plane** and both are nearly
 ### 📊 Efficiency vs Speed
 
 | Transfer Type            | Fuel Efficiency     | Time Taken |
-|                          |                     |            |
+|--------------------------|---------------------|------------|
 | **Hohmann Transfer**     | ✅ Very High        |  Slow     |
 | **Bi-Elliptic Transfer** | 🔄 Sometimes better |  Longer   |
 | **Direct Transfer**      | ❌ Wasteful         |  Fast     |
