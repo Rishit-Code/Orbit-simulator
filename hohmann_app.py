@@ -1,21 +1,40 @@
+# ---------------------------------
+# Import Libraries
+# ---------------------------------
 import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
-from skyfield.api import EarthSatellite, load, Loader
+import requests
+from skyfield.api import EarthSatellite, Loader
+from datetime import datetime
+import pydeck as pdk
 
-# Load planetary data (used in Tab 2)
+# ---------------------------------
+# Global Setup
+# ---------------------------------
 load = Loader(".")
-planets = load('./de440s.bsp')
-# Set up global time reference
+planets = load('./de440s.bsp')   # Planet ephemerides
 ts = load.timescale()
 current_time = ts.now()
+
+# Tabs
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "🛰️ Hohmann Transfer", "🌍 Planet Viewer", "🛰️ Leo to Meo",
-    "📘 What is Hohmann Transfer?", "🌐 Satelite Track"
+    "🛰️ Hohmann Transfer", 
+    "🌍 Planet Viewer", 
+    "🛰️ LEO to MEO", 
+    "📘 What is Hohmann Transfer?", 
+    "🌐 Satellite Tracker"
 ])
 
+# Constants
+G = 6.67430e-11
+M_earth = 5.972e24
+R_earth = 6.371e6
+earth_km = R_earth / 1000
 
-# TAB 1: Earth Orbit Transfer
+# ---------------------------------
+# TAB 1: Hohmann Transfer (LEO → GEO)
+# ---------------------------------
 with tab1:
     st.title("🛰️ Hohmann Transfer Orbit Simulator")
     st.markdown("Transfer between **LEO and GEO**. Customize the altitudes below:")
@@ -28,50 +47,42 @@ with tab1:
             st.error("⚠️ Final orbit altitude must be greater than initial orbit altitude.")
             st.stop()
 
-    G = 6.67430e-11
-    M_earth = 5.972e24
-    R_earth = 6.371e6
-
+    # Orbit calculations
     altitude1 = altitude1_km * 1000
     altitude2 = altitude2_km * 1000
-    r1 = R_earth + altitude1
-    r2 = R_earth + altitude2
-
-    v1 = np.sqrt(G * M_earth / r1)
-    v2 = np.sqrt(G * M_earth / r2)
+    r1, r2 = R_earth + altitude1, R_earth + altitude2
+    v1, v2 = np.sqrt(G*M_earth/r1), np.sqrt(G*M_earth/r2)
     a_transfer = (r1 + r2) / 2
-    v_transfer1 = np.sqrt(G * M_earth * (2/r1 - 1/a_transfer))
-    v_transfer2 = np.sqrt(G * M_earth * (2/r2 - 1/a_transfer))
-    delta_v1 = v_transfer1 - v1
-    delta_v2 = v2 - v_transfer2
+    v_transfer1 = np.sqrt(G*M_earth * (2/r1 - 1/a_transfer))
+    v_transfer2 = np.sqrt(G*M_earth * (2/r2 - 1/a_transfer))
+    delta_v1, delta_v2 = v_transfer1 - v1, v2 - v_transfer2
     total_delta_v = abs(delta_v1) + abs(delta_v2)
     T_hours = (np.pi * np.sqrt(a_transfer**3 / (G * M_earth))) / 3600
 
+    # Results
     st.subheader("🚀 Transfer Details")
     st.markdown(f"- **ΔV1:** {delta_v1:.2f} m/s")
     st.markdown(f"- **ΔV2:** {delta_v2:.2f} m/s")
     st.markdown(f"- **Total ΔV:** {total_delta_v:.2f} m/s")
     st.markdown(f"- **Transfer Time:** {T_hours:.2f} hours")
 
+    # Plot orbits
     theta = np.linspace(0, 2*np.pi, 500)
     phi = np.linspace(0, np.pi, 300)
-    r1_km = r1 / 1000
-    r2_km = r2 / 1000
-    earth_km = R_earth / 1000
-    x_trans_km = (a_transfer * np.cos(phi) - (a_transfer - r1)) / 1000
-    y_trans_km = (a_transfer * np.sqrt(1 - ((r1 - r2)**2 / (4 * a_transfer**2))) * np.sin(phi)) / 1000
+    r1_km, r2_km = r1/1000, r2/1000
+    x_trans_km = (a_transfer*np.cos(phi) - (a_transfer-r1))/1000
+    y_trans_km = (a_transfer*np.sqrt(1 - ((r1-r2)**2 / (4*a_transfer**2)))*np.sin(phi))/1000
 
     fig, ax = plt.subplots(figsize=(8, 8), facecolor='black')
     ax.set_facecolor("black")
-    ax.plot(earth_km * np.cos(theta), earth_km * np.sin(theta), color='white', label="Earth Surface")
-    ax.plot(0, 0, 'o', color='white', markersize=4, label="Earth Center")
-    ax.plot(r1_km * np.cos(theta), r1_km * np.sin(theta), color='cyan', label="LEO")
-    ax.plot(r2_km * np.cos(theta), r2_km * np.sin(theta), color='lime', label="GEO")
-    ax.plot(x_trans_km, y_trans_km, color='orange', linestyle='--', label="Hohmann Transfer")
+    ax.plot(earth_km*np.cos(theta), earth_km*np.sin(theta), color='white', label="Earth")
+    ax.plot(r1_km*np.cos(theta), r1_km*np.sin(theta), color='cyan', label="LEO")
+    ax.plot(r2_km*np.cos(theta), r2_km*np.sin(theta), color='lime', label="GEO")
+    ax.plot(x_trans_km, y_trans_km, color='orange', linestyle='--', label="Transfer")
     ax.plot(r1_km, 0, 'X', color='red', label="Burn 1")
     ax.plot(-r2_km, 0, 'X', color='purple', label="Burn 2")
 
-    # ISS and Hubble
+    # Live satellites (ISS + Hubble)
     iss = EarthSatellite(
         "1 25544U 98067A   24150.51834491  .00008764  00000+0  16178-3 0  9992",
         "2 25544  51.6400 194.5001 0003734  49.0609  81.0082 15.50553277428470", "ISS", ts
@@ -85,68 +96,46 @@ with tab1:
     ax.plot(np.linalg.norm(iss_pos), 0, 'o', color='yellow', label="ISS")
     ax.plot(-np.linalg.norm(hubble_pos), 0, '*', color='magenta', label="Hubble")
 
-    ax.set_title("Hohmann Transfer Orbit", color='white')
-    ax.set_xlabel("X (km)", color='white')
-    ax.set_ylabel("Y (km)", color='white')
-    ax.tick_params(colors='white')
-    ax.spines['bottom'].set_color('white')
-    ax.spines['left'].set_color('white')
-    ax.legend(facecolor='black', edgecolor='white', labelcolor='white')
-    ax.grid(True, linestyle=':', color='gray')
+    ax.legend(facecolor='black', edgecolor='white')
     ax.set_aspect('equal')
     st.pyplot(fig)
 
     # Satellite altitudes
-    iss_alt_km = np.linalg.norm(iss_pos) - earth_km
-    hubble_alt_km = np.linalg.norm(hubble_pos) - earth_km
     st.subheader("📡 Live Satellite Altitudes")
-    st.markdown(f"- **ISS:** {iss_alt_km:.2f} km")
-    st.markdown(f"- **Hubble:** {hubble_alt_km:.2f} km")
+    st.markdown(f"- **ISS:** {np.linalg.norm(iss_pos) - earth_km:.2f} km")
+    st.markdown(f"- **Hubble:** {np.linalg.norm(hubble_pos) - earth_km:.2f} km")
 
-
+# ---------------------------------
 # TAB 2: Planet Viewer
+# ---------------------------------
 with tab2:
     st.title("🌍 Real-Time Planetary Orbit Visualizer")
-
-    sun = planets['Sun']
-    earth = planets['Earth']
-    mars = planets['Mars Barycenter']
-    venus = planets['Venus']
-    jupiter = planets['Jupiter Barycenter']
+    sun, earth, mars, venus, jupiter = planets['Sun'], planets['Earth'], planets['Mars Barycenter'], planets['Venus'], planets['Jupiter Barycenter']
 
     earth_pos = earth.at(current_time).observe(sun).ecliptic_position().au
     mars_pos = mars.at(current_time).observe(sun).ecliptic_position().au
     venus_pos = venus.at(current_time).observe(sun).ecliptic_position().au
     jupiter_pos = jupiter.at(current_time).observe(sun).ecliptic_position().au
 
-    theta = np.linspace(0, 2*np.pi, 300)
-    radii = {'venus': 0.72, 'earth': 1.0, 'mars': 1.52, 'jupiter': 5.2}
-
     fig, ax = plt.subplots(figsize=(8, 8))
     ax.set_facecolor('black')
+    theta = np.linspace(0, 2*np.pi, 300)
+    radii = {'Venus': 0.72, 'Earth': 1.0, 'Mars': 1.52, 'Jupiter': 5.2}
     for planet, r in radii.items():
-        x = r * np.cos(theta)
-        y = r * np.sin(theta)
-        ax.plot(x, y, label=f"{planet.capitalize()} Orbit", linestyle='--')
-
+        ax.plot(r*np.cos(theta), r*np.sin(theta), linestyle='--', label=f"{planet} Orbit")
     ax.plot(venus_pos[0], venus_pos[1], 'o', color='orange', label="Venus")
     ax.plot(earth_pos[0], earth_pos[1], 'o', color='cyan', label="Earth")
     ax.plot(mars_pos[0], mars_pos[1], 'o', color='red', label="Mars")
     ax.plot(jupiter_pos[0], jupiter_pos[1], 'o', color='gold', label="Jupiter")
-    ax.plot(0, 0, 'o', color='yellow', label="Sun", markersize=12)
+    ax.plot(0, 0, 'o', color='yellow', markersize=12, label="Sun")
 
-    ax.set_xlabel("X (AU)", color='white')
-    ax.set_ylabel("Y (AU)", color='white')
-    ax.set_title("Planetary Orbits & Real-Time Positions", color='white')
-    ax.tick_params(colors='white')
-    ax.spines['bottom'].set_color('white')
-    ax.spines['left'].set_color('white')
     ax.axis('equal')
-    ax.grid(True, linestyle=':', color='gray')
-    ax.legend(facecolor='black', edgecolor='white', labelcolor='white')
+    ax.legend(facecolor='black', edgecolor='white')
     st.pyplot(fig)
 
-# TAB 3: LEO to MEO Transfer
+# ---------------------------------
+# TAB 3: LEO → MEO Transfer
+# ---------------------------------
 with tab3:
     st.title("🛰️ LEO to MEO Transfer")
     st.markdown("Simulate a transfer between **Low Earth Orbit and Medium Earth Orbit**.")
@@ -159,20 +148,16 @@ with tab3:
             st.error("⚠️ Final orbit altitude must be greater than initial orbit altitude.")
             st.stop()
 
-    altitude1 = altitude1_km * 1000
-    altitude2 = altitude2_km * 1000
-    r1 = R_earth + altitude1
-    r2 = R_earth + altitude2
-
-    v1 = np.sqrt(G * M_earth / r1)
-    v2 = np.sqrt(G * M_earth / r2)
-    a_transfer = (r1 + r2) / 2
-    v_transfer1 = np.sqrt(G * M_earth * (2/r1 - 1/a_transfer))
-    v_transfer2 = np.sqrt(G * M_earth * (2/r2 - 1/a_transfer))
-    delta_v1 = v_transfer1 - v1
-    delta_v2 = v2 - v_transfer2
-    total_delta_v = abs(delta_v1) + abs(delta_v2)
-    T_hours = (np.pi * np.sqrt(a_transfer**3 / (G * M_earth))) / 3600
+    # Similar calculations to Tab 1
+    altitude1, altitude2 = altitude1_km*1000, altitude2_km*1000
+    r1, r2 = R_earth + altitude1, R_earth + altitude2
+    v1, v2 = np.sqrt(G*M_earth/r1), np.sqrt(G*M_earth/r2)
+    a_transfer = (r1 + r2)/2
+    v_transfer1 = np.sqrt(G*M_earth * (2/r1 - 1/a_transfer))
+    v_transfer2 = np.sqrt(G*M_earth * (2/r2 - 1/a_transfer))
+    delta_v1, delta_v2 = v_transfer1-v1, v2-v_transfer2
+    total_delta_v = abs(delta_v1)+abs(delta_v2)
+    T_hours = (np.pi*np.sqrt(a_transfer**3/(G*M_earth)))/3600
 
     st.subheader("🚀 Transfer Details")
     st.markdown(f"- **ΔV1:** {delta_v1:.2f} m/s")
@@ -180,192 +165,49 @@ with tab3:
     st.markdown(f"- **Total ΔV:** {total_delta_v:.2f} m/s")
     st.markdown(f"- **Transfer Time:** {T_hours:.2f} hours")
 
-    phi = np.linspace(0, np.pi, 300)
-    r1_km = r1 / 1000
-    r2_km = r2 / 1000
-    x_trans_km = (a_transfer * np.cos(phi) - (a_transfer - r1)) / 1000
-    y_trans_km = (a_transfer * np.sqrt(1 - ((r1 - r2)**2 / (4 * a_transfer**2))) * np.sin(phi)) / 1000
-
-    fig, ax = plt.subplots(figsize=(8, 8), facecolor='black')
-    ax.set_facecolor("black")
-    ax.plot(earth_km * np.cos(theta), earth_km * np.sin(theta), color='white', label="Earth Surface")
-    ax.plot(0, 0, 'o', color='white', markersize=4, label="Earth Center")
-    ax.plot(r1_km * np.cos(theta), r1_km * np.sin(theta), color='cyan', label="LEO")
-    ax.plot(r2_km * np.cos(theta), r2_km * np.sin(theta), color='lime', label="MEO")
-    ax.plot(x_trans_km, y_trans_km, color='orange', linestyle='--', label="Transfer Trajectory")
-    ax.plot(r1_km, 0, 'X', color='red', label="Burn 1")
-    ax.plot(-r2_km, 0, 'X', color='purple', label="Burn 2")
-
-    ax.set_title("LEO to MEO Transfer", color='white')
-    ax.set_xlabel("X (km)", color='white')
-    ax.set_ylabel("Y (km)", color='white')
-    ax.tick_params(colors='white')
-    ax.spines['bottom'].set_color('white')
-    ax.spines['left'].set_color('white')
-    ax.legend(facecolor='black', edgecolor='white', labelcolor='white')
-    ax.grid(True, linestyle=':', color='gray')
-    ax.set_aspect('equal')
-    st.pyplot(fig)
-#Tab 4
+# ---------------------------------
+# TAB 4: Explanation
+# ---------------------------------
 with tab4:
     st.title("📘 What is a Hohmann Transfer Orbit?")
-
     st.markdown("""
-### 🚀 What is a Hohmann Transfer?
-
-A **Hohmann Transfer Orbit** is a simple and fuel-efficient method to move a spacecraft between two circular orbits using **two engine burns**. It’s like changing lanes in space, the smart way.
-
----
-
-### 🌌 Why Does It Matter?
-
-In space missions, fuel is **precious**. Hohmann transfers are used to:
-- Launch communication satellites from Low Earth Orbit (LEO) to Geostationary Earth Orbit (GEO)
-- Plan interplanetary missions like Earth → Mars or Earth → Venus
-- Reduce fuel costs during orbit adjustments
-
----
-
-### 🔥 How Does It Work?
-
-1. **Burn 1 (Perigee Burn)**: 
-   - The spacecraft gets a push to enter an elliptical orbit.
-   - This is called the **transfer orbit**.
-2. **Coasting Phase**:
-   - The spacecraft moves along the ellipse using no fuel.
-3. **Burn 2 (Apogee Burn)**:
-   - Another burn circularizes the orbit at the higher altitude.
-
-This method works **only when orbits are in the same plane** and both are nearly circular.
-
----
-
-### 🧠 Key Physics Concepts
-
-| Concept            | Meaning |
-|--------------------|--------|
-| **ΔV (Delta-V)**    | The change in speed (velocity) the rocket must make during each burn |
-| **Perigee**         | Closest point to Earth in an orbit |
-| **Apogee**          | Farthest point from Earth in an orbit |
-| **Ellipse**         | An oval shape — the shape of the transfer orbit |
-| **Semi-major axis** | The average distance from the center to the edge of the ellipse |
-
----
-
-### 🧮 Why Only Two Burns?
-
-- It’s based on **Kepler’s Laws** of planetary motion.
-- Two burns are enough when moving between **two circular and coplanar** orbits.
-- It assumes **no drag** (space is vacuum) and that you only need to change speed, not direction.
-
----
-
-### 📊 Efficiency vs Speed
-
-| Transfer Type            | Fuel Efficiency     | Time Taken |
-|--------------------------|---------------------|------------|
-| **Hohmann Transfer**     | ✅ Very High        |  Slow     |
-| **Bi-Elliptic Transfer** | 🔄 Sometimes better |  Longer   |
-| **Direct Transfer**      | ❌ Wasteful         |  Fast     |
-
----
-
-### 🛰️ Real World Examples
-
-- **Telecommunication Satellites**: They often launch into a transfer orbit and then complete a Hohmann transfer to reach GEO.
-- **Mars Missions**: Used to send probes from Earth to Mars when their positions align.
-- **Lunar Gateway Project**: NASA is studying variations of Hohmann for Moon missions.
-
----""")
-with tab4:
-    # streamlit_app.py
+    ### 🚀 Overview
+    A **Hohmann Transfer Orbit** is a fuel-efficient way to move a spacecraft between two circular orbits using two burns.
+    ...
+    """)
 
 # ---------------------------------
-# 1. Import Libraries
+# TAB 5: Satellite Tracker
 # ---------------------------------
-import streamlit as st
-import requests
-from skyfield.api import Loader, EarthSatellite
-from datetime import datetime
-import pydeck as pdk
+with tab5:
+    st.title("🌍 LEO Satellite Tracker")
+    st.write("Tracking commercial satellites (Starlink) in Low Earth Orbit (LEO).")
 
+    tle_url = "https://celestrak.org/NORAD/elements/starlink.txt"
+    response = requests.get(tle_url)
+    tle_data = response.text.strip().split("\n")
 
-# ---------------------------------
-# 2. Setup Streamlit Page
-# ---------------------------------
-st.title("🌍 LEO Satellite Tracker")
-st.write("Tracking commercial satellites (Starlink) in Low Earth Orbit (LEO).")
+    satellites = []
+    for i in range(0, len(tle_data), 3):
+        name, line1, line2 = tle_data[i].strip(), tle_data[i+1].strip(), tle_data[i+2].strip()
+        satellites.append(EarthSatellite(line1, line2, name, ts))
 
-# Initialize Skyfield (used for satellite calculations)
-load = Loader("~/.skyfield-data")
-ts = load.timescale()
+    t = ts.utc(datetime.utcnow())
+    positions = []
+    for sat in satellites[:100]:  # Limit for speed
+        subpoint = sat.at(t).subpoint()
+        positions.append({"name": sat.name, "lat": subpoint.latitude.degrees,
+                          "lon": subpoint.longitude.degrees, "alt_km": subpoint.elevation.km})
 
-
-# ---------------------------------
-# 3. Fetch Satellite Data (TLEs)
-# ---------------------------------
-# TLE = Two Line Element (data format for satellite orbits)
-tle_url = "https://celestrak.org/NORAD/elements/starlink.txt"
-
-# Get the raw text file of Starlink satellites
-response = requests.get(tle_url)
-tle_data = response.text.strip().split("\n")
-
-
-# ---------------------------------
-# 4. Create Satellite Objects
-# ---------------------------------
-satellites = []
-for i in range(0, len(tle_data), 3):  # Every satellite has 3 lines of data
-    name = tle_data[i].strip()
-    line1 = tle_data[i + 1].strip()
-    line2 = tle_data[i + 2].strip()
-    sat = EarthSatellite(line1, line2, name, ts)
-    satellites.append(sat)
-
-
-# ---------------------------------
-# 5. Calculate Current Positions
-# ---------------------------------
-t = ts.utc(datetime.utcnow())  # Current UTC time
-positions = []
-
-for sat in satellites[:100]:  # Only take first 100 satellites for speed
-    geocentric = sat.at(t)
-    subpoint = geocentric.subpoint()  # Where the satellite is above Earth
-    positions.append({
-        "name": sat.name,
-        "lat": subpoint.latitude.degrees,
-        "lon": subpoint.longitude.degrees,
-        "alt_km": subpoint.elevation.km
-    })
-
-
-# ---------------------------------
-# 6. Plot Satellites on World Map
-# ---------------------------------
-st.write("Showing first 100 Starlink satellites:")
-
-# Layer for satellites (blue dots)
-layer = pdk.Layer(
-    "ScatterplotLayer",
-    data=positions,
-    get_position="[lon, lat]",
-    get_radius=100000,          # dot size in meters
-    get_color=[0, 128, 255],    # blue for commercial
-    pickable=True               # allows hover tooltips
-)
-
-# World view settings
-view_state = pdk.ViewState(latitude=0, longitude=0, zoom=1)
-
-# Render map with tooltips
-r = pdk.Deck(
-    layers=[layer],
-    initial_view_state=view_state,
-    tooltip={"text": "{name}\nAlt: {alt_km} km"}
-)
-
-st.pydeck_chart(r)
-
-    
+    layer = pdk.Layer(
+        "ScatterplotLayer",
+        data=positions,
+        get_position="[lon, lat]",
+        get_radius=100000,
+        get_color=[0, 128, 255],
+        pickable=True
+    )
+    view_state = pdk.ViewState(latitude=0, longitude=0, zoom=1)
+    r = pdk.Deck(layers=[layer], initial_view_state=view_state,
+                 tooltip={"text": "{name}\nAlt: {alt_km} km"})
+    st.pydeck_chart(r)
