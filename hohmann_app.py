@@ -223,7 +223,7 @@ with tab1:
     elif total_kick_kms > 10:
         st.warning("🚀 **Big Rocket Needed** - This is why space is expensive!")
     else:
-        st.success("✅ **Feasible Mission** - Modern rockets can handle this!"
+        st.success("✅ **Feasible Mission** - Modern rockets can handle this!")
 
 with tab2:
     st.header("What is a Hohmann Transfer?")
