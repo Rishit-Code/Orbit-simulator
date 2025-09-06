@@ -11,7 +11,7 @@ ts = load.timescale()
 current_time = ts.now()
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "🛰️ Hohmann Transfer", "🌍 Planet Viewer", "🛰️ Leo to Meo",
-    "📘 What is Hohmann Transfer?", "🌐 Types of Orbits"
+    "📘 What is Hohmann Transfer?", "🌐 Satelite Track"
 ])
 
 
@@ -277,4 +277,95 @@ This method works **only when orbits are in the same plane** and both are nearly
 - **Lunar Gateway Project**: NASA is studying variations of Hohmann for Moon missions.
 
 ---""")
+with tab4:
+    # streamlit_app.py
+
+# ---------------------------------
+# 1. Import Libraries
+# ---------------------------------
+import streamlit as st
+import requests
+from skyfield.api import Loader, EarthSatellite
+from datetime import datetime
+import pydeck as pdk
+
+
+# ---------------------------------
+# 2. Setup Streamlit Page
+# ---------------------------------
+st.title("🌍 LEO Satellite Tracker")
+st.write("Tracking commercial satellites (Starlink) in Low Earth Orbit (LEO).")
+
+# Initialize Skyfield (used for satellite calculations)
+load = Loader("~/.skyfield-data")
+ts = load.timescale()
+
+
+# ---------------------------------
+# 3. Fetch Satellite Data (TLEs)
+# ---------------------------------
+# TLE = Two Line Element (data format for satellite orbits)
+tle_url = "https://celestrak.org/NORAD/elements/starlink.txt"
+
+# Get the raw text file of Starlink satellites
+response = requests.get(tle_url)
+tle_data = response.text.strip().split("\n")
+
+
+# ---------------------------------
+# 4. Create Satellite Objects
+# ---------------------------------
+satellites = []
+for i in range(0, len(tle_data), 3):  # Every satellite has 3 lines of data
+    name = tle_data[i].strip()
+    line1 = tle_data[i + 1].strip()
+    line2 = tle_data[i + 2].strip()
+    sat = EarthSatellite(line1, line2, name, ts)
+    satellites.append(sat)
+
+
+# ---------------------------------
+# 5. Calculate Current Positions
+# ---------------------------------
+t = ts.utc(datetime.utcnow())  # Current UTC time
+positions = []
+
+for sat in satellites[:100]:  # Only take first 100 satellites for speed
+    geocentric = sat.at(t)
+    subpoint = geocentric.subpoint()  # Where the satellite is above Earth
+    positions.append({
+        "name": sat.name,
+        "lat": subpoint.latitude.degrees,
+        "lon": subpoint.longitude.degrees,
+        "alt_km": subpoint.elevation.km
+    })
+
+
+# ---------------------------------
+# 6. Plot Satellites on World Map
+# ---------------------------------
+st.write("Showing first 100 Starlink satellites:")
+
+# Layer for satellites (blue dots)
+layer = pdk.Layer(
+    "ScatterplotLayer",
+    data=positions,
+    get_position="[lon, lat]",
+    get_radius=100000,          # dot size in meters
+    get_color=[0, 128, 255],    # blue for commercial
+    pickable=True               # allows hover tooltips
+)
+
+# World view settings
+view_state = pdk.ViewState(latitude=0, longitude=0, zoom=1)
+
+# Render map with tooltips
+r = pdk.Deck(
+    layers=[layer],
+    initial_view_state=view_state,
+    tooltip={"text": "{name}\nAlt: {alt_km} km"}
+)
+
+st.pydeck_chart(r)
+
     
